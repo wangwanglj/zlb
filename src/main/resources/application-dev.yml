@@ -1,0 +1,7 @@
+server:
+  port: 8088
+
+sunshine:
+  name: sunshine_server
+  authorization: wangwang:m5888406.
+  port: 47990
