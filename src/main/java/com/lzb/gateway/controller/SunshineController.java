@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -62,8 +63,27 @@ public class SunshineController {
 
         try {
             Instance instance = namingService.selectOneHealthyInstance(sunshineServerName);
+            // 檢測鏈接是否有效
+                String ip = instance.getIp();
+                InetAddress address = InetAddress.getByName(ip);
+                if (!address.isReachable(SunshineService.TIMEOUT_MS)) {
+                    sunshineService.registerInstance(namingService, ip, Integer.parseInt(sunshinePort), false);
+                    instance = namingService.selectOneHealthyInstance(sunshineServerName);
+                    log.info("服務器已不可用: {}  ", ip);
+                    return Result.success(instance);
+                }
+                // 获取注册信息
+                int connectCount = sunshineService.getSunshineConnectCount(ip);
+                if(connectCount>0){
+                    sunshineService.registerInstance(namingService, ip, Integer.parseInt(sunshinePort), false);
+                    instance = namingService.selectOneHealthyInstance(sunshineServerName);
+                    log.info("服務器已被分配: {} connectCount:{} ", ip, connectCount);
+                    return Result.success(instance);
+                }
+                log.info("分配机器成功 {}",instance);
             return Result.success(instance);
-        } catch (NacosException e) {
+        } catch (Exception e) {
+            log.error("服務器分配，分配失敗，無可用服務器");
             return Result.failure();
         }
     }
@@ -75,7 +95,7 @@ public class SunshineController {
         try {
             List<Instance> allInstances = namingService.getAllInstances(sunshineServerName);
             return Result.success(allInstances);
-        } catch (NacosException e) {
+        } catch (Exception e) {
             return Result.failure();
         }
     }

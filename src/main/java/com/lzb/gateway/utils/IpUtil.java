@@ -1,5 +1,7 @@
 package com.lzb.gateway.utils;
 
+import com.alibaba.nacos.api.naming.NamingService;
+
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -50,5 +52,20 @@ public class IpUtil {
             }
         }
         return LOCALHOST_IPV6.equals(ip) ? LOCALHOST_IP : ip;
+    }
+
+    /**
+     * 檢測ip是否可以訪問
+     * @param ip
+     * @return
+     */
+    public static final boolean checkIpReachable(String ip){
+        try {
+            InetAddress address = InetAddress.getByName(ip);
+            if (address.isReachable(10)) {
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 }

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.lzb.gateway.utils.SunshineUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -39,9 +40,9 @@ public class SunshineService {
      */
     private static final Queue<String> ipQueue = new ConcurrentLinkedQueue<>();
 
-    private static final int TIMEOUT_MS = 10;      // 超时时间（ms）
+    public static final int TIMEOUT_MS = 10;      // 超时时间（ms）
 
-    private static final int THREAD_POOL_SIZE = 500;  // 控制线程池大小
+    private static final int THREAD_POOL_SIZE = 1000;  // 控制线程池大小
 
     /**
      * sunshine 请求头
@@ -278,10 +279,15 @@ public class SunshineService {
      * @return
      */
     public int getSunshineConnectCount(String ip){
-        String sunshineUrl = getSunshineUrl(ip);
+//        String sunshineUrl = getSunshineUrl(ip);
+        String sunshineUrl = SunshineUtil.getSessionCount(ip,sunshinePort);
         ResponseEntity<String> response = restTemplate.exchange(sunshineUrl, HttpMethod.GET, new HttpEntity<>(sunshineHeaders), String.class);
         String body = response.getBody();
         JSONObject jsonObject = JSONObject.parseObject(body);
+        Object count = jsonObject.get("count");
+        if(count==null){
+            return 999;
+        }
         // 获取注册信息
         return jsonObject.getIntValue("count");
     }
