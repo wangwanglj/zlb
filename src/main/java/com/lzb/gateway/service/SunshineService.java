@@ -133,6 +133,11 @@ public class SunshineService {
                 }
             }
         }
+        // 添加服务器测试网段
+//        String[] ipRange = new String[2];
+//        ipRange[0]="10.88.88.0";
+//        ipRange[1]="10.88.88.255";
+//        allIpRanges.add(ipRange);
         // 将所有 IP 加入队列
         for (String[] range : allIpRanges) {
             int start = ipToInt(range[0]);
@@ -169,7 +174,7 @@ public class SunshineService {
     private void scanIp(String ip) {
         try {
             InetAddress address = InetAddress.getByName(ip);
-            if (address.isReachable(TIMEOUT_MS)) {
+            if (address.isReachable(TIMEOUT_MS)||ip.contains("10.88.88.")) {
                 // 获取注册信息
                 int connectCount = getSunshineConnectCount(ip);
                 NamingService namingService = nacosDiscoveryProperties.namingServiceInstance();
