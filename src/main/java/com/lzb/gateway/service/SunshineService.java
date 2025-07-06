@@ -92,7 +92,7 @@ public class SunshineService {
         // 启动统计可用sunshine服务
         executorService.scheduleWithFixedDelay(()->{
             try {
-                setIpQueue();
+//                setIpQueue();
             } catch (Exception e) {
                 log.error("scheduleWithFixedDelay.withFixedReportLoginStatisticData:", e);
             }

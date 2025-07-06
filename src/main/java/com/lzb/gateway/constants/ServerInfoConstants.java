@@ -41,6 +41,12 @@ public interface ServerInfoConstants {
     String SUNSHINE_STATUS = "sun_status";
 
     /**
+     * 服务状态
+     * 1：可用 0：已关机
+     */
+    String SERVER_STATUS = "status";
+
+    /**
      * 显卡类型 {@link GraphicsCardType}
      */
     String CARD_TYPE = "card_type";

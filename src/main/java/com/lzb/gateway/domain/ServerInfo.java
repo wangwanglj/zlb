@@ -26,6 +26,11 @@ public class ServerInfo {
     private int type;
 
     /**
+     * 服务名称
+     */
+    private String serverName;
+
+    /**
      * 服务节点ip地址
      */
     private String ip;
@@ -52,6 +57,11 @@ public class ServerInfo {
     private int sunshineStatus;
 
     /**
+     * 服务是否可用 1可用 0已关机
+     */
+    private int status;
+
+    /**
      * 显卡类型 {@link GraphicsCardType}
      */
     private int cardType;
@@ -71,19 +81,21 @@ public class ServerInfo {
         instance.getMetadata().put(ServerInfoConstants.MAC_ADDRESS, macAddress);
         instance.getMetadata().put(ServerInfoConstants.VERSION, version);
         instance.getMetadata().put(ServerInfoConstants.SUNSHINE_STATUS, String.valueOf(sunshineStatus));
+        instance.getMetadata().put(ServerInfoConstants.SERVER_STATUS, String.valueOf(status));
         instance.getMetadata().put(ServerInfoConstants.CARD_TYPE, String.valueOf(cardType));
         // sunshine服务节点持久化
         if (serverType == ServerType.SUNSHINE) {
             instance.setEphemeral(false);
         }
         instance.setHealthy(sunshineStatus <= 0);
-        instance.setEnabled(sunshineStatus <= 0);
+        instance.setEnabled(status>0);
         instance.setWeight(sunshineStatus <= 0 ? 1 : 0);
         return instance;
     }
 
     /**
      * 构建服务信息
+     *
      * @param instance
      * @return
      */
@@ -91,13 +103,24 @@ public class ServerInfo {
         ServerInfo serverInfo = new ServerInfo();
         serverInfo.setNodeId(instance.getMetadata().get(ServerInfoConstants.NODE_ID));
         serverInfo.setType(Integer.parseInt(instance.getMetadata().get(ServerInfoConstants.SERVER_TYPE)));
+        ServerType serverType = ServerType.getServerType(serverInfo.getType());
+        serverInfo.setServerName(serverType.getName());
         serverInfo.setIp(instance.getIp());
         serverInfo.setMacAddress(instance.getMetadata().get(ServerInfoConstants.MAC_ADDRESS));
         serverInfo.setPort(String.valueOf(instance.getPort()));
         serverInfo.setVersion(instance.getMetadata().get(ServerInfoConstants.VERSION));
         serverInfo.setSunshineStatus(Integer.parseInt(instance.getMetadata().get(ServerInfoConstants.SUNSHINE_STATUS)));
+        serverInfo.setStatus(Integer.parseInt(instance.getMetadata().get(ServerInfoConstants.SERVER_STATUS)));
         serverInfo.setCardType(Integer.parseInt(instance.getMetadata().get(ServerInfoConstants.CARD_TYPE)));
         return serverInfo;
+    }
+
+    /**
+     * 服务是否可用
+     * @return
+     */
+    public boolean availableServer() {
+        return sunshineStatus <= 0 && status > 0;
     }
 
 }

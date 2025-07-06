@@ -5,7 +5,9 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.lzb.gateway.constants.Result;
+import com.lzb.gateway.constants.ServerType;
 import com.lzb.gateway.domain.ServerInfo;
+import com.lzb.gateway.listener.ServerConfiguration;
 import com.lzb.gateway.service.SunshineService;
 import com.lzb.gateway.utils.IpUtil;
 import com.lzb.gateway.utils.SunshineUtil;
@@ -53,32 +55,31 @@ public class SunshineController {
     @Resource
     private RestTemplate restTemplate;
 
+    @Autowired
+    private ServerConfiguration serverConfiguration;
+
     @GetMapping("/randomService")
     public Result<ServerInfo> randomService() {
         ServerInfo serverInfo = null;
 
         try {
-            Instance instance = namingService.selectOneHealthyInstance(sunshineServerName);
+            serverInfo = serverConfiguration.randomServerInfo(ServerType.SUNSHINE);
             // 檢測鏈接是否有效
-            String ip = instance.getIp();
+            String ip = serverInfo.getIp();
             InetAddress address = InetAddress.getByName(ip);
             if (!address.isReachable(SunshineService.TIMEOUT_MS)) {
-                sunshineService.registerInstance(namingService, ip, Integer.parseInt(sunshinePort), false);
-                instance = namingService.selectOneHealthyInstance(sunshineServerName);
-                log.info("服務器已不可用: {}  ", ip);
-                serverInfo = ServerInfo.fromInstance(instance);
+                // 服务不可用，更新状态
+                serverInfo.setSunshineStatus(1);
+                serverInfo.setStatus(0);
+                ServerInfo failServer = serverInfo;
+
+                Instance instance = serverInfo.toInstance();
+                namingService.registerInstance(sunshineServerName, instance);
+                serverInfo = serverConfiguration.randomServerInfo(ServerType.SUNSHINE);
+                log.info("服務器已不可用,重新选择 failServer={}  new:{}", failServer, serverInfo);
                 return Result.success(serverInfo);
             }
-            // 获取注册信息
-            int connectCount = sunshineService.getSunshineConnectCount(ip);
-            if (connectCount > 0) {
-                sunshineService.registerInstance(namingService, ip, Integer.parseInt(sunshinePort), false);
-                instance = namingService.selectOneHealthyInstance(sunshineServerName);
-                log.info("服務器已被分配: {} connectCount:{} ", ip, connectCount);
-                serverInfo = ServerInfo.fromInstance(instance);
-                return Result.success(serverInfo);
-            }
-            log.info("分配机器成功 {}", instance);
+            log.info("分配机器成功 {}", serverInfo);
             return Result.success(serverInfo);
         } catch (Exception e) {
             log.error("服務器分配，分配失敗，無可用服務器");
@@ -177,17 +178,9 @@ public class SunshineController {
     }
 
     @PostMapping("/reportInfo")
-    public Result<ServerInfo> reportInfo(String node_id, String ip, String mac_addr, String port, String version, int sun_status, int type,int card_type) {
-        log.info("reportInfo node_id:{} ip:{} mac_addr:{} port:{} version:{} sun_status:{} type:{}", node_id, ip, mac_addr, port, version, sun_status, type);
-        ServerInfo serverInfo = new ServerInfo();
-        serverInfo.setNodeId(node_id);
-        serverInfo.setIp(ip);
-        serverInfo.setPort(port);
-        serverInfo.setVersion(version);
-        serverInfo.setSunshineStatus(sun_status);
-        serverInfo.setMacAddress(mac_addr);
-        serverInfo.setType(type);
-        serverInfo.setCardType(card_type);
+    public Result<ServerInfo> reportInfo(@RequestBody ServerInfo serverInfo) {
+        serverInfo.setStatus(1);
+        log.info("reportInfo serverInfo:{}", serverInfo);
         Instance instance = serverInfo.toInstance();
 
         // 更新服务状态
