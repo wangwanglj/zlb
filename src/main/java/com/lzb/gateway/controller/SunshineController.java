@@ -1,6 +1,6 @@
 package com.lzb.gateway.controller;
 
-import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
+import com.alibaba.nacos.api.annotation.NacosInjected;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
@@ -38,8 +38,8 @@ import java.util.Map;
 @Slf4j
 public class SunshineController {
 
-    @Autowired
-    private NacosDiscoveryProperties nacosDiscoveryProperties;
+    @NacosInjected
+    private NamingService namingService;
 
     @Value("${sunshine.name}")
     private String sunshineServerName;
@@ -55,7 +55,6 @@ public class SunshineController {
 
     @GetMapping("/randomService")
     public Result<ServerInfo> randomService() {
-        NamingService namingService = nacosDiscoveryProperties.namingServiceInstance();
         ServerInfo serverInfo = null;
 
         try {
@@ -89,8 +88,6 @@ public class SunshineController {
 
     @GetMapping("/getAllServices")
     public Result<List<Instance>> getAllSunshineServices(){
-        NamingService namingService = nacosDiscoveryProperties.namingServiceInstance();
-
         try {
             List<Instance> allInstances = namingService.getAllInstances(sunshineServerName);
             return Result.success(allInstances);
@@ -101,7 +98,6 @@ public class SunshineController {
 
     @GetMapping("/pin")
     public Result<Instance> pin(HttpServletRequest request,@RequestParam String ip,@RequestParam String pinCode) {
-        NamingService namingService = nacosDiscoveryProperties.namingServiceInstance();
         log.info("pin 开始 ip:{} pinCode:{}",ip,pinCode);
 
         try {
@@ -158,7 +154,6 @@ public class SunshineController {
 
     @GetMapping("/disconnect")
     public Result<String> disconnect(HttpServletRequest request, @RequestParam String ip) throws NacosException {
-        NamingService namingService = nacosDiscoveryProperties.namingServiceInstance();
 
         // 获取请求方ip
         String ipAddress = IpUtil.getIpAddress(request);
@@ -195,7 +190,6 @@ public class SunshineController {
         serverInfo.setCardType(card_type);
         Instance instance = serverInfo.toInstance();
 
-        NamingService namingService = nacosDiscoveryProperties.namingServiceInstance();
         // 更新服务状态
         try {
             namingService.registerInstance(sunshineServerName, instance);

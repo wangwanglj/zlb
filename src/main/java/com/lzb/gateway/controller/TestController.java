@@ -1,15 +1,13 @@
 package com.lzb.gateway.controller;
 
-import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
+import com.alibaba.nacos.api.annotation.NacosInjected;
+import com.alibaba.nacos.api.naming.NamingService;
 import com.lzb.gateway.service.SunshineService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,8 +26,8 @@ public class TestController {
     private RestTemplate restTemplate;
 
 
-    @Autowired
-    private NacosDiscoveryProperties nacosDiscoveryProperties;
+    @NacosInjected
+    private NamingService namingService;
 
     @Value("${server.port}")
     private String serverPort;

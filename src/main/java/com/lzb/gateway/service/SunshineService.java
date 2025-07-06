@@ -1,17 +1,18 @@
 package com.lzb.gateway.service;
 
-import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.nacos.api.annotation.NacosInjected;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.lzb.gateway.utils.SunshineUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -61,8 +62,8 @@ public class SunshineService {
     @Value("${sunshine.name}")
     private String sunshineServerName;
 
-    @Autowired
-    private NacosDiscoveryProperties nacosDiscoveryProperties;
+    @NacosInjected
+    private NamingService namingService;
 
     /**
      * 已注册的 sunshine 客户端
@@ -177,7 +178,6 @@ public class SunshineService {
             if (address.isReachable(TIMEOUT_MS)||ip.contains("10.88.88.")) {
                 // 获取注册信息
                 int connectCount = getSunshineConnectCount(ip);
-                NamingService namingService = nacosDiscoveryProperties.namingServiceInstance();
                 registerInstance(namingService, ip, Integer.parseInt(sunshinePort), connectCount==0);
                 log.info("sunshine服务地址: {} connectCount:{} ", ip, connectCount);
             }
