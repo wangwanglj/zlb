@@ -19,8 +19,15 @@ public class NacosConfiguration {
     @Value("${nacos.server-addr}")
     private String serverAddr;
 
-    @Value("${nacos.namespace}")
+    @Value("${nacos.namespace:null}")
     private String nameSpace;
+
+    @Value("${nacos.username:null}")
+    private String username;
+
+    @Value("${nacos.password:null}")
+    private String password;
+
 
     @Bean
     public NamingService namingService() throws NacosException {
@@ -29,6 +36,12 @@ public class NacosConfiguration {
         properties.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
         if (StringUtils.isNotEmpty(nameSpace)) {
             properties.put(PropertyKeyConst.NAMESPACE, nameSpace);
+        }
+        if (StringUtils.isNotEmpty(username)) {
+            properties.put(PropertyKeyConst.USERNAME, username);
+        }
+        if (StringUtils.isNotEmpty(password)) {
+            properties.put(PropertyKeyConst.PASSWORD, password);
         }
         return NacosFactory.createNamingService(properties);
     }

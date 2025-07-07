@@ -5,6 +5,7 @@ import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.lzb.gateway.constants.Result;
 import com.lzb.gateway.constants.ServerType;
+import com.lzb.gateway.dto.cache.ServerInfoCache;
 import com.lzb.gateway.dto.entity.ServerInfo;
 import com.lzb.gateway.listener.ServerConfiguration;
 import com.lzb.gateway.service.SunshineService;
@@ -55,7 +56,7 @@ public class SunshineController {
     private RestTemplate restTemplate;
 
     @Autowired
-    private ServerConfiguration serverConfiguration;
+    private ServerInfoCache serverConfiguration;
 
     @GetMapping("/randomService")
     public Result<ServerInfo> randomService() {
@@ -70,10 +71,9 @@ public class SunshineController {
                 // 服务不可用，更新状态
                 serverInfo.setSun_status(1);
                 serverInfo.setStatus(0);
+                serverConfiguration.addServerInfo(serverInfo);
                 ServerInfo failServer = serverInfo;
 
-                Instance instance = serverInfo.toInstance();
-                namingService.registerInstance(sunshineServerName, instance);
                 serverInfo = serverConfiguration.randomServerInfo(ServerType.SUNSHINE);
                 log.info("服務器已不可用,重新选择 failServer={}  new:{}", failServer, serverInfo);
                 return Result.success(serverInfo);
@@ -180,15 +180,7 @@ public class SunshineController {
     public Result<ServerInfo> reportInfo(@RequestBody ServerInfo serverInfo) {
         serverInfo.setStatus(1);
         log.info("reportInfo serverInfo:{}", serverInfo);
-        Instance instance = serverInfo.toInstance();
-
-        // 更新服务状态
-        try {
-            namingService.registerInstance(sunshineServerName, instance);
-        } catch (NacosException e) {
-            log.error("更新服务状态失败 {}", serverInfo, e);
-            return Result.failure(e.getMessage());
-        }
+        serverConfiguration.addServerInfo(serverInfo);
         return Result.success(serverInfo);
     }
 

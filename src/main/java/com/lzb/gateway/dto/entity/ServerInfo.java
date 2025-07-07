@@ -1,6 +1,7 @@
 package com.lzb.gateway.dto.entity;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.lzb.gateway.constants.GraphicsCardType;
 import com.lzb.gateway.constants.ServerInfoConstants;
@@ -21,6 +22,7 @@ public class ServerInfo {
     /**
      * 服务节点id
      */
+    @TableId
     private String node_id;
 
     /**
@@ -84,7 +86,7 @@ public class ServerInfo {
         instance.getMetadata().put(ServerInfoConstants.SERVER_STATUS, String.valueOf(status));
         instance.getMetadata().put(ServerInfoConstants.CARD_TYPE, String.valueOf(card_type));
         // 7服务节点持久化
-        instance.setEphemeral(false);
+//        instance.setEphemeral(false);
         instance.setHealthy(sun_status <= 0);
         instance.setEnabled(status > 0);
         instance.setWeight(sun_status <= 0 ? 1 : 0);

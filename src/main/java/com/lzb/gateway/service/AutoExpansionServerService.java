@@ -1,8 +1,8 @@
 package com.lzb.gateway.service;
 
 import com.lzb.gateway.constants.ServerType;
+import com.lzb.gateway.dto.cache.ServerInfoCache;
 import com.lzb.gateway.dto.entity.ServerInfo;
-import com.lzb.gateway.listener.ServerConfiguration;
 import com.lzb.gateway.utils.MagicPackageUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -27,7 +27,7 @@ import java.util.List;
 public class AutoExpansionServerService {
 
     @Autowired
-    private ServerConfiguration serverConfiguration;
+    private ServerInfoCache serverConfiguration;
 
     @Value("${sunshine.auto.expansion.num:2}")
     private int sunshineAutoExpansionNum;
