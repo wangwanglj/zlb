@@ -1,12 +1,11 @@
 package com.lzb.gateway.controller;
 
-import com.alibaba.nacos.api.annotation.NacosInjected;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.lzb.gateway.constants.Result;
 import com.lzb.gateway.constants.ServerType;
-import com.lzb.gateway.domain.ServerInfo;
+import com.lzb.gateway.dto.entity.ServerInfo;
 import com.lzb.gateway.listener.ServerConfiguration;
 import com.lzb.gateway.service.SunshineService;
 import com.lzb.gateway.utils.IpUtil;
@@ -40,7 +39,7 @@ import java.util.Map;
 @Slf4j
 public class SunshineController {
 
-    @NacosInjected
+    @Autowired
     private NamingService namingService;
 
     @Value("${sunshine.name}")
@@ -69,7 +68,7 @@ public class SunshineController {
             InetAddress address = InetAddress.getByName(ip);
             if (!address.isReachable(SunshineService.TIMEOUT_MS)) {
                 // 服务不可用，更新状态
-                serverInfo.setSunshineStatus(1);
+                serverInfo.setSun_status(1);
                 serverInfo.setStatus(0);
                 ServerInfo failServer = serverInfo;
 
@@ -188,6 +187,7 @@ public class SunshineController {
             namingService.registerInstance(sunshineServerName, instance);
         } catch (NacosException e) {
             log.error("更新服务状态失败 {}", serverInfo, e);
+            return Result.failure(e.getMessage());
         }
         return Result.success(serverInfo);
     }

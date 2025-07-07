@@ -8,6 +8,7 @@ import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.lzb.gateway.utils.SunshineUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -62,7 +63,7 @@ public class SunshineService {
     @Value("${sunshine.name}")
     private String sunshineServerName;
 
-    @NacosInjected
+    @Autowired
     private NamingService namingService;
 
     /**

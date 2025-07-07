@@ -1,7 +1,7 @@
 package com.lzb.gateway.service;
 
 import com.lzb.gateway.constants.ServerType;
-import com.lzb.gateway.domain.ServerInfo;
+import com.lzb.gateway.dto.entity.ServerInfo;
 import com.lzb.gateway.listener.ServerConfiguration;
 import com.lzb.gateway.utils.MagicPackageUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +63,7 @@ public class AutoExpansionServerService {
         int size = unavailableInstances.size();
         int random = RandomUtils.nextInt(0, size);
         ServerInfo needStartServer = unavailableInstances.get(random);
-        String mac = needStartServer.getMacAddress();
+        String mac = needStartServer.getMac_addr();
         MagicPackageUtils.sendMagicPackage(mac);
         log.info("扩容主机 needStartServer：{}", needStartServer);
     }

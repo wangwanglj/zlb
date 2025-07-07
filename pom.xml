@@ -16,7 +16,7 @@
     <properties>
         <java.version>1.8</java.version>
         <spring.nacos.version>0.3.0-RC</spring.nacos.version>
-        <nacos.version>2.4.3</nacos.version>
+        <nacos.version>2.2.4</nacos.version>
     </properties>
 
     <repositories>
@@ -52,6 +52,20 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.5.5</version> <!-- 建议用最新版 -->
+        </dependency>
+
+        <!-- 数据库驱动，例如 MySQL -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

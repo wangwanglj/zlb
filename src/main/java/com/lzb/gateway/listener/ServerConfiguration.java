@@ -1,16 +1,19 @@
 package com.lzb.gateway.listener;
 
-import com.alibaba.nacos.api.annotation.NacosInjected;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.listener.AbstractEventListener;
+import com.alibaba.nacos.api.naming.listener.Event;
+import com.alibaba.nacos.api.naming.listener.NamingEvent;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.alibaba.nacos.client.naming.listener.AbstractNamingChangeListener;
-import com.alibaba.nacos.client.naming.listener.NamingChangeEvent;
+//import com.alibaba.nacos.client.naming.listener.AbstractNamingChangeListener;
+//import com.alibaba.nacos.client.naming.listener.NamingChangeEvent;
 import com.alibaba.nacos.common.utils.MapUtil;
 import com.lzb.gateway.constants.ServerType;
-import com.lzb.gateway.domain.ServerInfo;
+import com.lzb.gateway.dto.entity.ServerInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
@@ -33,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Configuration
 public class ServerConfiguration {
 
-    @NacosInjected
+    @Autowired
     private NamingService namingService;
 
     @Value("${sunshine.name}")
@@ -43,7 +46,7 @@ public class ServerConfiguration {
      * 服务节点缓存
      * <服务类型，《服务id，服务信息》>
      */
-    private final Map<Integer, Map<String, ServerInfo>> serviceNodesMap = new ConcurrentHashMap<>();
+    private Map<Integer, Map<String, ServerInfo>> serviceNodesMap = new ConcurrentHashMap<>();
 
     public static ScheduledThreadPoolExecutor NACOS_SERVICE_CHANGE_THREAD_POOL = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
 
@@ -58,33 +61,49 @@ public class ServerConfiguration {
 
     @PostConstruct
     public void init() {
-        AbstractNamingChangeListener listener = new AbstractNamingChangeListener() {
+        AbstractEventListener listener = new AbstractEventListener() {
+            @Override
+            public void onEvent(Event event) {
+                if(event instanceof NamingEvent){
+                    NamingEvent namingEvent = (NamingEvent) event;
+
+                    Map<Integer, Map<String, ServerInfo>> nodeMap = new ConcurrentHashMap<>();
+                    List<Instance> instances = namingEvent.getInstances();
+                    for (Instance instance : instances) {
+                        ServerInfo serviceNode = ServerInfo.fromInstance(instance);
+                        Map<String, ServerInfo> serviceNodeMap = nodeMap.computeIfAbsent(serviceNode.getType(), k -> new ConcurrentHashMap<>());
+                        serviceNodeMap.put(serviceNode.getNode_id(), serviceNode);
+                    }
+                    serviceNodesMap =  nodeMap;
+                }
+            }
+
             @Override
             public Executor getExecutor() {
                 return NACOS_SERVICE_CHANGE_THREAD_POOL;
             }
 
-            @Override
-            public void onChange(NamingChangeEvent event) {
-                // 移除服务
-                if (event.isRemoved()) {
-                    List<Instance> removedInstances = event.getRemovedInstances();
-                    removedInstances(removedInstances);
-                    log.info("nacos service removed,serviceName={},instances={}", sunshineServerName, removedInstances);
-                }
-                // 新增服务
-                if (event.isAdded()) {
-                    List<Instance> addedInstances = event.getAddedInstances();
-                    addedInstances(addedInstances);
-                    log.info("nacos service added,serviceName={},instances={}", sunshineServerName, addedInstances);
-                }
-                // 修改服务
-                if (event.isModified()) {
-                    List<Instance> modifiedInstances = event.getModifiedInstances();
-                    modifiedInstances(modifiedInstances);
-                    log.info("nacos service modified,serviceName={},instances={}", sunshineServerName, modifiedInstances);
-                }
-            }
+//            @Override
+//            public void onChange(NamingChangeEvent event) {
+//                // 移除服务
+//                if (event.isRemoved()) {
+//                    List<Instance> removedInstances = event.getRemovedInstances();
+//                    removedInstances(removedInstances);
+//                    log.info("nacos service removed,serviceName={},instances={}", sunshineServerName, removedInstances);
+//                }
+//                // 新增服务
+//                if (event.isAdded()) {
+//                    List<Instance> addedInstances = event.getAddedInstances();
+//                    addedInstances(addedInstances);
+//                    log.info("nacos service added,serviceName={},instances={}", sunshineServerName, addedInstances);
+//                }
+//                // 修改服务
+//                if (event.isModified()) {
+//                    List<Instance> modifiedInstances = event.getModifiedInstances();
+//                    modifiedInstances(modifiedInstances);
+//                    log.info("nacos service modified,serviceName={},instances={}", sunshineServerName, modifiedInstances);
+//                }
+//            }
         };
 
         try {
@@ -107,8 +126,8 @@ public class ServerConfiguration {
                 continue;
             }
             Map<String, ServerInfo> serviceNodeMap = serviceNodesMap.computeIfAbsent(serviceNode.getType(), k -> new ConcurrentHashMap<>());
-            serviceNodeMap.remove(serviceNode.getNodeId());
-            changedServiceNodes.put(serviceNode.getNodeId(), serviceNode);
+            serviceNodeMap.remove(serviceNode.getNode_id());
+            changedServiceNodes.put(serviceNode.getNode_id(), serviceNode);
         }
     }
 
@@ -123,7 +142,7 @@ public class ServerConfiguration {
                 continue;
             }
             Map<String, ServerInfo> serviceNodeMap = serviceNodesMap.computeIfAbsent(serviceNode.getType(), k -> new ConcurrentHashMap<>());
-            serviceNodeMap.put(serviceNode.getNodeId(), serviceNode);
+            serviceNodeMap.put(serviceNode.getNode_id(), serviceNode);
         }
     }
 
@@ -139,8 +158,8 @@ public class ServerConfiguration {
                 continue;
             }
             Map<String, ServerInfo> serviceNodeMap = serviceNodesMap.computeIfAbsent(serviceNode.getType(), k -> new ConcurrentHashMap<>());
-            serviceNodeMap.put(serviceNode.getNodeId(), serviceNode);
-            changedServiceNodes.put(serviceNode.getNodeId(), serviceNode);
+            serviceNodeMap.put(serviceNode.getNode_id(), serviceNode);
+            changedServiceNodes.put(serviceNode.getNode_id(), serviceNode);
         }
     }
 
